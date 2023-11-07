@@ -1,7 +1,7 @@
 # Calculadora-Avancada-CSharp
 Calculadora capaz de interpretar uma expressão matemática contendo soma, subtração, divisão e multiplicação, seguindo o PEMDAS(Parênteses, Exponenciação, Multiplicação, Adição, Subtração).
 
-Este é um código C# que implementa uma calculadora capaz de ler expressões matemáticas. Vou explicar as principais partes do código:
+Principais partes do código:
 
 1. **Método `Calc`**:
    ```csharp
@@ -64,4 +64,6 @@ Este é um código C# que implementa uma calculadora capaz de ler expressões ma
    - `Result`: Calcula o resultado de uma operação entre dois números.
    - `ToFloat` Converte uma string em float.
 
-Esse código implementa uma calculadora que é capaz de avaliar expressões matemáticas simples, levando em consideração a precedência dos operadores e o uso de parênteses. Por exemplo, ela pode avaliar expressões como `3 + (4 * 2)`, que resultaria em `11`, ou `24 / 4 + 5 - 4 * (5+2+(24 / 4) - 2)` que resultaria em `-33`
+**Exemplo de entrada e saida**: 
+   - entrada: `3 + (4 * 2)`, saida: `11`
+   - entrada: `24 / 4 + 5 - 4 * (5 + 2 + (24 / 4) - 2)`, saida: `-33`
