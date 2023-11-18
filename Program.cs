@@ -4,7 +4,10 @@ class Program
 {
 	public static void Main(string[] args)
 	{
-		string input = Console.ReadLine();
+		string? input = Console.ReadLine();
+
+		if(input == string.Empty)
+			return;
 
 		Console.WriteLine(Calc(input));
 	}
@@ -12,8 +15,7 @@ class Program
 	private static float Calc(string input)
 	{
 		try{
-			List<string> c = SplitStringIntoChar(input);
-			return HandleExpression(HandleParen(c));
+			return HandleExpression(HandleParen(SplitStringIntoChar(input)));
 		}catch(Exception){ throw new InvalidOperationException(); }
 	}
 
@@ -67,17 +69,19 @@ class Program
 
 	private static float HandleExpression(List<string> data)
 	{
-		int interations = 7;
+		int maxInterations = 7;
 
 		float numA, numB;
 		float r;
 
-		while (interations > 0)
+		while (maxInterations > 0)
 		{
 			int divideOpIndex = -1;
 			int multiplyOpIndex = -1;
 			int addOpIndex = -1;
 			int subOpIndex = -1;
+
+			int opIndex = -1;
 
 			if (data.Contains("/"))
 			{
@@ -99,56 +103,35 @@ class Program
 
 			if (divideOpIndex < multiplyOpIndex && divideOpIndex != -1)
 			{
-				goto Div;
+				opIndex = divideOpIndex;
 			}
 			else
 			{
 				if (multiplyOpIndex != -1)
-					goto Mult;
+					opIndex = multiplyOpIndex;
 
 				if (divideOpIndex != -1)
-					goto Div;
+					opIndex = divideOpIndex;
 			}
 
 			if (addOpIndex != -1)
-				goto Add;
+				opIndex = addOpIndex;
 			if (subOpIndex != -1)
-				goto Sub;
+				opIndex = subOpIndex;
+
+			if(opIndex != -1)
+			{
+				numA = ToFloat(data[opIndex - 1]);
+				numB = ToFloat(data[opIndex + 1]);
+				r = Result(numA, numB, data[opIndex]);
+				RemoveItens(ref data, opIndex - 1, 2);
+				data[opIndex - 1] = r.ToString();
+				continue;
+			}
 
 			if (data.Count == 1) break;
 
-			interations--;
-
-			continue;
-
-		Add:
-			numA = ToFloat(data[addOpIndex - 1]);
-			numB = ToFloat(data[addOpIndex + 1]);
-			r = Result(numA, numB, data[addOpIndex]);
-			RemoveItens(ref data, addOpIndex - 1, 2);
-			data[addOpIndex - 1] = r.ToString();
-			continue;
-		Sub:
-			numA = ToFloat(data[subOpIndex - 1]);
-			numB = ToFloat(data[subOpIndex + 1]);
-			r = Result(numA, numB, data[subOpIndex]);
-			RemoveItens(ref data, subOpIndex - 1, 2);
-			data[subOpIndex - 1] = r.ToString();
-			continue;
-		Div:
-			numA = ToFloat(data[divideOpIndex - 1]);
-			numB = ToFloat(data[divideOpIndex + 1]);
-			r = Result(numA, numB, data[divideOpIndex]);
-			RemoveItens(ref data, divideOpIndex - 1, 2);
-			data[divideOpIndex - 1] = r.ToString();
-			continue;
-		Mult:
-			numA = ToFloat(data[multiplyOpIndex - 1]);
-			numB = ToFloat(data[multiplyOpIndex + 1]);
-			r = Result(numA, numB, data[multiplyOpIndex]);
-			RemoveItens(ref data, multiplyOpIndex - 1, 2);
-			data[multiplyOpIndex - 1] = r.ToString();
-			continue;
+			maxInterations--;
 		}
 
 		return ToFloat(data[0]);
