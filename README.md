@@ -6,38 +6,36 @@ Principais partes do código:
 1. **Método `Calc`**:
    ```csharp
    private static float Calc(string input)
-   {
-       try
-       {
-           List<string> c = SplitStringIntoChar(input);
-           return HandleExpression(HandleParen(c));
-       }
-       catch (Exception)
-       {
-           throw new InvalidOperationException();
-       }
-   }
+	{
+		try
+		{
+			return EvaluateExpression(TokenizeExpression(input));
+		}
+		catch (Exception)
+		{
+			throw new InvalidOperationException();
+		}
+	}
    ```
    O método `Calc` é responsável por calcular o resultado da expressão matemática. Ele faz isso em três passos:
-   - Primeiro, ele divide a expressão em uma lista de caracteres (`List<string> c`) usando o método `SplitStringIntoChar`.
-   - Em seguida, ele trata os parênteses chamando o método `HandleParen`.
-   - Por fim, ele calcula a expressão usando o método `HandleExpression`.
+   - Primeiro, ele divide a expressão em tokens e armazena em uma lista de caracteres atraves do método `TokenizeExpression`.
+   - E por fim, ele calcula a expressão usando o método `EvaluateExpression`.
 
 2. **Método `SplitStringIntoChar`**:
    ```csharp
-   private static List<string> SplitStringIntoChar(string n)
+   private static List<string> TokenizeExpression(string expression)
    {
        // ...
    }
    ```
-   Este método converte a expressão em uma lista de caracteres. Ele percorre a string caractere por caractere e identifica operadores matemáticos (+, -, *, /) e parênteses.
+   Este método converte a expressão em uma lista de tokens. Ele percorre a string caractere por caractere e identifica operadores matemáticos (+, -, *, /) e parênteses.
 
 `Entrada:` string = "20 + 4 - (5 * 3) / 3" <br>
 `Saida:` List(string) = { "20", "+", "4", "-", "(", "5", "*", "3", ")", "/", "3" }
 
-3. **Método `HandleParen`**:
+3. **Método `EvaluateParentheses`**:
    ```csharp
-   private static List<string> HandleParen(List<string> data)
+   private static void EvaluateParentheses(List<string> tokens)
    {
        // ...
    }
@@ -47,21 +45,20 @@ Principais partes do código:
 `Entrada:` List(string) = { "20", "+", "4", "-", "(", "5", "*", "3", ")", "/", "3" } <br>
 `Saida:` List(string) = { "20", "+", "4", "-", "15", "/", "3" } => `20 + 4 - 15 / 3`
 
-4. **Método `HandleExpression`**:
+4. **Método `EvaluateExpression`**:
    ```csharp
-   private static float HandleExpression(List<string> data)
+   private static float EvaluateExpression(List<string> tokens)
    {
        // ...
    }
    ```
-   Este método trata as operações na expressão (adição, subtração, multiplicação e divisão) em ordem de precedência. Ele utiliza um loop para iterar sobre a lista de caracteres e realiza as operações conforme necessário.
+   Este método trata as operações na expressão (adição, subtração, multiplicação e divisão) em ordem de precedência. Ele utiliza um loop para iterar sobre a lista de tokens e realiza as operações atraves do `Dictionary operators`.
 
 `Entrada:` List(string) = { "20", "+", "4", "-", "15", "/", "3" } <br>
 `Saida:` float = 19
 
 5. **Métodos Auxiliares**:
-   - `RemoveItens`: Remove um determinado número de itens de uma lista a partir de uma posição específica.
-   - `Result`: Calcula o resultado de uma operação entre dois números.
+   - `FindNextOperatorIndex`: Encontra o operador mais proximo seguindo o PEMDAS.
    - `ToFloat` Converte uma string em float.
 
 **Exemplo de entrada e saida**: 
