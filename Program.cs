@@ -1,202 +1,111 @@
-﻿namespace Calculator;
+﻿using System.Text.RegularExpressions;
+
+namespace Calculator;
 
 class Program
 {
 	public static void Main(string[] args)
 	{
+		Console.Write("> ");
 		string? input = Console.ReadLine();
 
-		if(input == string.Empty)
-			return;
-
-		Console.WriteLine(Calc(input));
+		try
+		{
+			Console.WriteLine(Calc(input));
+		}
+		catch (InvalidOperationException)
+		{
+			Console.WriteLine("Erro na expressão.");
+		}
 	}
 
 	private static float Calc(string input)
 	{
-		try{
-			return HandleExpression(HandleParen(SplitStringIntoChar(input)));
-		}catch(Exception){ throw new InvalidOperationException(); }
+		try
+		{
+			return EvaluateExpression(TokenizeExpression(input));
+		}
+		catch (Exception)
+		{
+			throw new InvalidOperationException();
+		}
 	}
 
-	private static List<string> HandleParen(List<string> data)
+	private static List<string> TokenizeExpression(string expression)
 	{
-		do
+		string pattern = @"([+\-*/()])|\s+";
+		string[] tokens = Regex.Split(expression, pattern, RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
+
+		List<string> result = new();
+		foreach (string token in tokens)
 		{
-			int parenStart = -1;
-			int parenEnd = -1;
-
-			int c = 0;
-			foreach (string s in data)
+			if (!string.IsNullOrWhiteSpace(token))
 			{
-				if (s.Equals("("))
-				{
-					parenStart = c;
-				}
-				if (s.Equals(")") && parenEnd == -1)
-				{
-					parenEnd = c;
-				}
-				c++;
+				result.Add(token);
 			}
+		}
 
-			if (!parenStart.Equals(-1) && !parenEnd.Equals(-1))
-			{
-				List<string> parenData = new();
-
-				for (int i = parenStart + 1; i < parenEnd; i++)
-				{
-					parenData.Add(data[i]);
-				}
-
-				int parenDataSize = parenData.Count;
-
-				HandleExpression(parenData);
-
-				RemoveItens(ref data, parenStart, parenDataSize + 1);
-
-				data[parenStart] = HandleExpression(parenData).ToString();
-
-				continue;
-			}
-			else 
-				break; 
-
-		}while (true);
-
-		return data;
+		return result;
 	}
 
-	private static float HandleExpression(List<string> data)
+	private static float EvaluateExpression(List<string> tokens)
 	{
-		int maxInterations = 7;
+		EvaluateParentheses(tokens);
 
-		float numA, numB;
-		float r;
+		Dictionary<string, Func<float, float, float>> operators = new()
+			{
+				{ "*", (a, b) => a * b },
+				{ "/", (a, b) => a / b },
+				{ "+", (a, b) => a + b },
+				{ "-", (a, b) => a - b }
+			};
 
-		while (maxInterations > 0)
+		while (tokens.Count > 1)
 		{
-			int divideOpIndex = -1;
-			int multiplyOpIndex = -1;
-			int addOpIndex = -1;
-			int subOpIndex = -1;
+			int operatorIndex = FindNextOperatorIndex(tokens, operators.Keys);
+			float numA = ToFloat(tokens[operatorIndex - 1]);
+			float numB = ToFloat(tokens[operatorIndex + 1]);
+			float result = operators[tokens[operatorIndex]](numA, numB);
+			tokens.RemoveRange(operatorIndex - 1, 3);
+			tokens.Insert(operatorIndex - 1, result.ToString());
+		}
 
-			int opIndex = -1;
+		return ToFloat(tokens[0]);
+	}
 
-			if (data.Contains("/"))
-			{
-				divideOpIndex = data.IndexOf("/");
-			}
+	private static void EvaluateParentheses(List<string> tokens)
+	{
+		while (tokens.Contains("("))
+		{
+			int openParenIndex = tokens.LastIndexOf("(");
+			int closeParenIndex = tokens.FindIndex(openParenIndex, s => s.Equals(")"));
 
-			if (data.Contains("*"))
+			if (openParenIndex != -1 && closeParenIndex != -1)
 			{
-				multiplyOpIndex = data.IndexOf("*");
-			}
-			if (data.Contains("+"))
-			{
-				addOpIndex = data.IndexOf("+");
-			}
-			if (data.Contains("-"))
-			{
-				subOpIndex = data.IndexOf("-");
-			}
-
-			if (divideOpIndex < multiplyOpIndex && divideOpIndex != -1)
-			{
-				opIndex = divideOpIndex;
+				List<string> insideParentheses = tokens.GetRange(openParenIndex + 1, closeParenIndex - openParenIndex - 1);
+				float result = EvaluateExpression(insideParentheses);
+				tokens.RemoveRange(openParenIndex, closeParenIndex - openParenIndex + 1);
+				tokens.Insert(openParenIndex, result.ToString());
 			}
 			else
 			{
-				if (multiplyOpIndex != -1)
-					opIndex = multiplyOpIndex;
-
-				if (divideOpIndex != -1)
-					opIndex = divideOpIndex;
+				throw new InvalidOperationException();
 			}
-
-			if (addOpIndex != -1)
-				opIndex = addOpIndex;
-			if (subOpIndex != -1)
-				opIndex = subOpIndex;
-
-			if(opIndex != -1)
-			{
-				numA = ToFloat(data[opIndex - 1]);
-				numB = ToFloat(data[opIndex + 1]);
-				r = Result(numA, numB, data[opIndex]);
-				RemoveItens(ref data, opIndex - 1, 2);
-				data[opIndex - 1] = r.ToString();
-				continue;
-			}
-
-			if (data.Count == 1) break;
-
-			maxInterations--;
 		}
-
-		return ToFloat(data[0]);
 	}
 
-	private static void RemoveItens(ref List<string> list, int itemIndex, int amount)
+	private static int FindNextOperatorIndex(List<string> tokens, IEnumerable<string> operators)
 	{
-		for (int i = 0; i < amount; i++)
+		foreach (string op in operators)
 		{
-			list.RemoveAt(itemIndex);
-		}
-	}
-
-	private static float Result(float a, float b, string op)
-	{
-        return op switch
-        {
-            "+" => a + b,
-            "-" => a - b,
-            "/" => a / b,
-            "*" => a * b,
-            _ => 0,
-        };
-    }
-
-	private static List<string> SplitStringIntoChar(string n)
-	{
-		List<string> characters = new();
-
-		string r = "";
-
-		bool breakLine = false;
-
-		foreach (char c in n)
-		{
-			if (!c.Equals(' '))
+			int index = tokens.IndexOf(op);
+			if (index != -1)
 			{
-				switch (c)
-				{
-					case '+': breakLine = true; break;
-					case '-': breakLine = true; break;
-					case '/': breakLine = true; break;
-					case '*': breakLine = true; break;
-					case '(': breakLine = true; break;
-					case ')': breakLine = true; break;
-				}
-
-				if (breakLine)
-				{
-					if (!r.Equals(""))
-						characters.Add(r);
-
-					characters.Add(c.ToString());
-					r = "";
-					breakLine = false;
-					continue;
-				}
-				r += c;
+				return index;
 			}
 		}
-
-		characters.Add(r);
-
-		return characters;
+		throw new InvalidOperationException("Operador não encontrado.");
 	}
 
-	private static float ToFloat(string s) { return Convert.ToSingle(s); }
+	private static float ToFloat(string s) => Convert.ToSingle(s);
 }
