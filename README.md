@@ -1,4 +1,4 @@
-# Calculadora-Avancada-CSharp
+# Calculadora-CSharp
 Calculadora capaz de interpretar uma expressão matemática contendo soma, subtração, divisão e multiplicação, seguindo o PEMDAS(Parênteses, Exponenciação, Multiplicação, Adição, Subtração).
 
 Principais partes do código:
